@@ -1,0 +1,51 @@
+# Detekt configuration for Notova. Built upon the default config (buildUponDefaultConfig = true).
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  LongMethod:
+    active: true
+    threshold: 80
+  LongParameterList:
+    active: true
+    functionThreshold: 8
+    constructorThreshold: 10
+  TooManyFunctions:
+    active: false
+
+style:
+  MagicNumber:
+    active: false
+  WildcardImport:
+    active: true
+  ForbiddenComment:
+    active: false
+  UnusedPrivateMember:
+    active: true
+  ReturnCount:
+    active: true
+    max: 4
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+
+naming:
+  FunctionNaming:
+    # Allow @Composable functions to start with an uppercase letter.
+    ignoreAnnotated: ['Composable']
+  MatchingDeclarationName:
+    # Allow small helper objects (e.g. *ScreenTags for Compose UI tests) to be co-located in the
+    # same file as the composable they describe, rather than forcing a separate file each.
+    active: false
+
+comments:
+  active: true
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false

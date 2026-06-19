@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Simple microphone glyph centered in the safe zone. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,38m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,47h4v18h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,44h4v3a10,10 0,0 0,20 0v-3h4v3a14,14 0,0 1,-28 0z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,68h16v4h-16z" />
+</vector>

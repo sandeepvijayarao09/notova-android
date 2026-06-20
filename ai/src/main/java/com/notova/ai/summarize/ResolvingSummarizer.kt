@@ -3,6 +3,7 @@ package com.notova.ai.summarize
 import com.notova.core.model.Summary
 import com.notova.core.model.Transcript
 import com.notova.core.summarize.Summarizer
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,12 +40,37 @@ class ResolvingSummarizer
             return chosen ?: engines.last()
         }
 
+        // Intentionally catches Throwable: a fallback resolver must survive ANY engine
+        // failure and try the next one (CancellationException is rethrown for coroutine safety).
+        @Suppress("TooGenericExceptionCaught")
         override suspend fun summarize(
             transcript: Transcript,
             style: String,
         ): Summary {
-            val engine = resolve()
-            _activeEngine.value = engine.engineName
-            return engine.summarize(transcript, style)
+            // Engines in priority order that currently report available. The stub is
+            // always available; ifEmpty preserves the "fall back to the last engine"
+            // guarantee even if nothing reports available.
+            val candidates =
+                engines
+                    .filter { runCatching { it.isAvailable() }.getOrDefault(false) }
+                    .ifEmpty { listOf(engines.last()) }
+
+            // Try each in order; if one reports available but throws at runtime (e.g. a
+            // model that loads but errors mid-inference), fall back to the next rather
+            // than failing the pipeline. The stub never throws, so this always resolves.
+            var lastError: Throwable? = null
+            for (engine in candidates) {
+                try {
+                    val summary = engine.summarize(transcript, style)
+                    _activeEngine.value = engine.engineName
+                    return summary
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    lastError = e
+                }
+            }
+            _activeEngine.value = null
+            throw IllegalStateException("All summarization engines failed", lastError)
         }
     }

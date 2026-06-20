@@ -26,18 +26,21 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.Notova">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- OAuth integration return deep link: notova://oauth/callback -->
+            <!-- OAuth integration return deep link: notova://oauth/<provider>?status=connected -->
             <intent-filter android:autoVerify="false">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="notova" />
+                <data
+                    android:host="oauth"
+                    android:scheme="notova" />
             </intent-filter>
         </activity>
 

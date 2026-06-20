@@ -38,6 +38,7 @@ object SettingsScreenTags {
     const val DOWNLOAD_PROGRESS = "settings_download_progress"
     const val MODELS_LIST = "settings_models_list"
     const val NO_MODELS = "settings_no_models"
+    const val SIGN_OUT_BUTTON = "settings_sign_out_button"
 
     fun deleteModel(name: String): String = "settings_delete_model_$name"
 }
@@ -57,6 +58,7 @@ private const val SAMPLE_MODEL_NAME = "gemma-2b-it-cpu-int4.task"
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
+    onSignOut: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,6 +80,7 @@ fun SettingsScreen(
         onImport = { importLauncher.launch(arrayOf("*/*")) },
         onDownload = { viewModel.downloadModel(SAMPLE_MODEL_URL, SAMPLE_MODEL_NAME) },
         onDelete = viewModel::deleteModel,
+        onSignOut = onSignOut,
     )
 }
 
@@ -91,6 +94,7 @@ fun SettingsContent(
     onImport: () -> Unit = {},
     onDownload: () -> Unit = {},
     onDelete: (String) -> Unit = {},
+    onSignOut: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
@@ -156,6 +160,14 @@ fun SettingsContent(
             ) {
                 state.models.forEach { model -> ModelRow(model = model, onDelete = onDelete) }
             }
+        }
+
+        Text(text = "Account", style = MaterialTheme.typography.titleMedium)
+        OutlinedButton(
+            onClick = onSignOut,
+            modifier = Modifier.testTag(SettingsScreenTags.SIGN_OUT_BUTTON),
+        ) {
+            Text("Sign out")
         }
     }
 }

@@ -2,6 +2,7 @@ package com.notova.ai.transcribe
 
 import com.notova.core.model.Transcript
 import com.notova.core.transcribe.Transcriber
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,9 +39,31 @@ class ResolvingTranscriber
             return chosen ?: engines.last()
         }
 
+        // Intentionally catches Throwable: a fallback resolver must survive ANY engine
+        // failure and try the next one (CancellationException is rethrown for coroutine safety).
+        @Suppress("TooGenericExceptionCaught")
         override suspend fun transcribe(audioPath: String): Transcript {
-            val engine = resolve()
-            _activeEngine.value = engine.engineName
-            return engine.transcribe(audioPath)
+            val candidates =
+                engines
+                    .filter { runCatching { it.isAvailable() }.getOrDefault(false) }
+                    .ifEmpty { listOf(engines.last()) }
+
+            // Try each available engine in order; if one reports available but throws
+            // at runtime (e.g. SpeechRecognizer with no offline data / a file source it
+            // can't consume), fall back to the next. The stub never throws.
+            var lastError: Throwable? = null
+            for (engine in candidates) {
+                try {
+                    val transcript = engine.transcribe(audioPath)
+                    _activeEngine.value = engine.engineName
+                    return transcript
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    lastError = e
+                }
+            }
+            _activeEngine.value = null
+            throw IllegalStateException("All transcription engines failed", lastError)
         }
     }

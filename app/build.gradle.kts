@@ -94,6 +94,9 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
 
+    // Chrome Custom Tabs for the OAuth authorize flow.
+    implementation(libs.androidx.browser)
+
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.androidx.hilt.work)
@@ -108,6 +111,11 @@ dependencies {
     // SettingsViewModelTest builds a real ModelDownloader, which needs OkHttp on the test classpath
     // (the :ai project dependency exposes it via implementation, not api).
     testImplementation(libs.okhttp)
+    // Auth/Integrations/Export ViewModel tests drive the real repositories against a MockWebServer.
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.retrofit)
+    testImplementation(libs.retrofit.kotlinx.serialization)
+    testImplementation(libs.kotlinx.serialization.json)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.androidx.test.core.ktx)

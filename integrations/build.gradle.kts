@@ -27,6 +27,13 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 dependencies {
@@ -40,6 +47,9 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
 
+    // Encrypted-at-rest token storage (AES-256, key in the Android Keystore).
+    implementation(libs.androidx.security.crypto)
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
@@ -49,4 +59,7 @@ dependencies {
     testImplementation(libs.retrofit)
     testImplementation(libs.retrofit.kotlinx.serialization)
     testImplementation(libs.kotlinx.serialization.json)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.core.ktx)
 }

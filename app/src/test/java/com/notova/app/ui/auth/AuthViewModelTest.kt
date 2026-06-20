@@ -164,4 +164,17 @@ class AuthViewModelTest {
         assertNull(store.accessTokenBlocking())
         assertEquals(AuthRoute.SIGNED_OUT, route)
     }
+
+    @Test
+    fun `continue offline advances to signed-in without a token or network call`() {
+        val vm = viewModel()
+        assertEquals(AuthRoute.SIGNED_OUT, waitForState(supplier = { vm.route.value }) { it != AuthRoute.LOADING })
+
+        vm.continueOffline()
+        val route = waitForState(supplier = { vm.route.value }) { it == AuthRoute.SIGNED_IN }
+
+        assertEquals(AuthRoute.SIGNED_IN, route)
+        assertNull(store.accessTokenBlocking())
+        assertEquals(0, server.requestCount)
+    }
 }

@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -31,6 +32,7 @@ object SignInScreenTags {
     const val CREATE_ACCOUNT_BUTTON = "signin_create_account_button"
     const val ERROR = "signin_error"
     const val PROGRESS = "signin_progress"
+    const val CONTINUE_OFFLINE_BUTTON = "signin_continue_offline_button"
 }
 
 /**
@@ -51,6 +53,7 @@ fun SignInScreen(
         onPasswordChange = viewModel::onPasswordChange,
         onSignIn = viewModel::signIn,
         onCreateAccount = viewModel::createAccount,
+        onContinueOffline = viewModel::continueOffline,
     )
 }
 
@@ -63,6 +66,7 @@ fun SignInContent(
     onPasswordChange: (String) -> Unit = {},
     onSignIn: () -> Unit = {},
     onCreateAccount: () -> Unit = {},
+    onContinueOffline: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxSize().padding(24.dp),
@@ -71,7 +75,9 @@ fun SignInContent(
     ) {
         Text(text = "Notova", style = MaterialTheme.typography.headlineMedium)
         Text(
-            text = "Sign in to sync metadata and connect integrations. Your audio and AI stay on-device.",
+            text =
+                "Sign in to sync and connect integrations — or continue without an account. " +
+                    "Your audio and AI always stay on-device.",
             style = MaterialTheme.typography.bodyMedium,
         )
 
@@ -123,6 +129,14 @@ fun SignInContent(
             modifier = Modifier.fillMaxWidth().testTag(SignInScreenTags.CREATE_ACCOUNT_BUTTON),
         ) {
             Text("Create Account")
+        }
+
+        TextButton(
+            onClick = onContinueOffline,
+            enabled = !state.submitting,
+            modifier = Modifier.fillMaxWidth().testTag(SignInScreenTags.CONTINUE_OFFLINE_BUTTON),
+        ) {
+            Text("Continue without an account")
         }
     }
 }

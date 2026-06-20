@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,14 +52,24 @@ class AuthViewModel
         private val _uiState = MutableStateFlow(SignInUiState())
         val uiState: StateFlow<SignInUiState> = _uiState.asStateFlow()
 
+        // Set when the user chooses "Continue without an account". The on-device
+        // experience (record/transcribe/summarize) works fully offline; only
+        // integrations + metadata sync require an account.
+        private val offlineOverride = MutableStateFlow(false)
+
         val route: StateFlow<AuthRoute> =
-            authRepository.isSignedIn
-                .map { signedIn -> if (signedIn) AuthRoute.SIGNED_IN else AuthRoute.SIGNED_OUT }
-                .stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.Eagerly,
-                    initialValue = AuthRoute.LOADING,
-                )
+            combine(authRepository.isSignedIn, offlineOverride) { signedIn, offline ->
+                if (signedIn || offline) AuthRoute.SIGNED_IN else AuthRoute.SIGNED_OUT
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = AuthRoute.LOADING,
+            )
+
+        /** Enter the app without signing in (on-device features only). */
+        fun continueOffline() {
+            offlineOverride.value = true
+        }
 
         fun onEmailChange(value: String) {
             _uiState.update { it.copy(email = value, error = null) }
@@ -74,6 +84,7 @@ class AuthViewModel
         fun createAccount() = submit(register = true)
 
         fun signOut() {
+            offlineOverride.value = false
             viewModelScope.launch { authRepository.signOut() }
         }
 

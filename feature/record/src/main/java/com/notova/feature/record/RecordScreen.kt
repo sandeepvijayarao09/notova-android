@@ -1,5 +1,9 @@
 package com.notova.feature.record
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -19,8 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -43,11 +49,24 @@ fun RecordScreen(
     viewModel: RecordViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     val importLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let { viewModel.importFile(it.toString()) }
         }
+
+    // Recording needs RECORD_AUDIO (mandatory) and, on Android 13+, POST_NOTIFICATIONS for the
+    // ongoing/"note ready" notifications (optional — recording proceeds either way). Start only once
+    // the mic permission is actually granted.
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+            if (hasRecordAudioPermission(context)) viewModel.startRecording()
+        }
+    val onRecord: () -> Unit = {
+        val missing = missingRecordingPermissions(context)
+        if (missing.isEmpty()) viewModel.startRecording() else permissionLauncher.launch(missing)
+    }
 
     Column(
         modifier = modifier.fillMaxSize().padding(24.dp),
@@ -68,7 +87,7 @@ fun RecordScreen(
             }
             else -> {
                 Button(
-                    onClick = viewModel::startRecording,
+                    onClick = onRecord,
                     modifier = Modifier.testTag(RecordScreenTags.RECORD_BUTTON),
                 ) {
                     Icon(Icons.Filled.Mic, contentDescription = null)
@@ -86,11 +105,28 @@ fun RecordScreen(
     }
 }
 
+private fun hasRecordAudioPermission(context: Context): Boolean =
+    ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+        PackageManager.PERMISSION_GRANTED
+
+/** The recording permissions not yet granted: RECORD_AUDIO always, POST_NOTIFICATIONS on API 33+. */
+private fun missingRecordingPermissions(context: Context): Array<String> =
+    buildList {
+        if (!hasRecordAudioPermission(context)) add(Manifest.permission.RECORD_AUDIO)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }.toTypedArray()
+
 private fun phaseLabel(phase: RecordPhase): String =
     when (phase) {
         RecordPhase.IDLE -> "Ready to capture"
         RecordPhase.RECORDING -> "Recording…"
         RecordPhase.PROCESSING -> "Transcribing & summarizing on-device…"
+        RecordPhase.QUEUED -> "Queued — processing in the background"
         RecordPhase.DONE -> "Saved to Notes"
         RecordPhase.ERROR -> "Error"
     }

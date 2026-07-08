@@ -16,11 +16,12 @@ import javax.inject.Singleton
  * the Settings UI.
  *
  * Priority (highest first):
- *  1. [SpeechRecognizerTranscriber] — Android on-device speech recognition, when available.
- *  2. [StubTranscriberEngine]       — always available placeholder fallback.
+ *  1. [GemmaAudioTranscriber]       — Gemma 3n audio modality via LiteRT-LM, when a model is installed.
+ *  2. [SpeechRecognizerTranscriber] — Android on-device speech recognition, when available.
+ *  3. [StubTranscriberEngine]       — always available placeholder fallback.
  *
- * Local Whisper is intentionally out of scope; a `WhisperTranscriberEngine` slots in at the front
- * of this list with no other change. The list is injected so tests can supply fakes.
+ * A dedicated Whisper engine could slot in at the front of this list with no other change. The list
+ * is injected so tests can supply fakes.
  */
 @Singleton
 class ResolvingTranscriber

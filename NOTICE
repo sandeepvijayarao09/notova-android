@@ -24,3 +24,23 @@ Retrofit, OkHttp, and kotlinx.serialization, each distributed under their
 respective licenses (predominantly Apache License 2.0). On-device AI models
 (e.g. Whisper, Gemma) carry their own separate licenses and are NOT bundled in
 this scaffold.
+
+-------------------------------------------------------------------------------
+Google AI Edge Gallery
+
+The on-device LiteRT-LM engine logic in this application
+(ai/src/main/java/com/notova/ai/summarize/LiteRtLmEngine.kt) is adapted from
+Google AI Edge Gallery, specifically its `LlmChatModelHelper` Engine/Conversation
+usage.
+
+    Google AI Edge Gallery
+    https://github.com/google-ai-edge/gallery
+    Copyright 2025 Google LLC
+    Licensed under the Apache License, Version 2.0.
+
+Modifications by Notova: distilled to a single guarded Engine that runs one
+short-lived Conversation per request, exposing text generation (summarization)
+and audio-modality transcription behind Notova's own engine interfaces.
+
+This application depends on LiteRT-LM (com.google.ai.edge.litertlm), Google's
+on-device LLM runtime, distributed under the Apache License, Version 2.0.

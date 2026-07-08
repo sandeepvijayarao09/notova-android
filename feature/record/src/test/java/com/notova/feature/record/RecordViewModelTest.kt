@@ -33,7 +33,9 @@ class RecordViewModelTest {
         audioSource: FakeAudioSource = FakeAudioSource(),
         repository: FakeRecordingRepository = FakeRecordingRepository(),
         pipeline: PipelineUseCase = pipeline(),
-    ) = RecordViewModel(audioSource, pipeline, repository)
+        scheduler: FakeRecordingProcessingScheduler = FakeRecordingProcessingScheduler(),
+        foregroundController: FakeRecordingForegroundController = FakeRecordingForegroundController(),
+    ) = RecordViewModel(audioSource, pipeline, repository, scheduler, foregroundController)
 
     @Test
     fun `initial state is idle`() {
@@ -67,6 +69,40 @@ class RecordViewModelTest {
 
             assertEquals(RecordPhase.ERROR, vm.uiState.value.phase)
             assertEquals("mic busy", vm.uiState.value.message)
+        }
+
+    @Test
+    fun `recording starts then stops the microphone foreground service`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val controller = FakeRecordingForegroundController()
+            val vm = viewModel(foregroundController = controller)
+
+            vm.startRecording()
+            advanceUntilIdle()
+            assertEquals(1, controller.startCalls)
+            assertEquals(0, controller.stopCalls)
+
+            vm.stopRecording()
+            advanceUntilIdle()
+            assertEquals(1, controller.stopCalls)
+        }
+
+    @Test
+    fun `a failed start tears the foreground service back down`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val controller = FakeRecordingForegroundController()
+            val vm =
+                viewModel(
+                    audioSource = FakeAudioSource(startError = IllegalStateException("mic busy")),
+                    foregroundController = controller,
+                )
+
+            vm.startRecording()
+            advanceUntilIdle()
+
+            assertEquals(1, controller.startCalls)
+            assertEquals(1, controller.stopCalls)
+            assertEquals(RecordPhase.ERROR, vm.uiState.value.phase)
         }
 
     @Test
@@ -142,25 +178,24 @@ class RecordViewModelTest {
         }
 
     @Test
-    fun `importFile triggers the pipeline and reaches DONE`() =
+    fun `importFile queues the recording for background processing instead of running inline`() =
         runTest(mainDispatcherRule.dispatcher) {
             val audio = FakeAudioSource()
             val repo = FakeRecordingRepository()
-            val vm = viewModel(audioSource = audio, repository = repo)
+            val scheduler = FakeRecordingProcessingScheduler()
+            val vm = viewModel(audioSource = audio, repository = repo, scheduler = scheduler)
 
-            vm.uiState.test {
-                assertEquals(RecordPhase.IDLE, awaitItem().phase)
+            vm.importFile("content://audio/123")
+            advanceUntilIdle()
 
-                vm.importFile("content://audio/123")
-                assertEquals(RecordPhase.PROCESSING, awaitItem().phase)
-
-                val done = awaitItem()
-                assertEquals(RecordPhase.DONE, done.phase)
-                cancelAndIgnoreRemainingEvents()
-            }
-
+            val state = vm.uiState.value
+            assertEquals(RecordPhase.QUEUED, state.phase)
+            assertNotNull(state.lastRecordingId)
             assertEquals("content://audio/123", audio.lastImportedUri)
-            assertEquals(1, repo.upsertedSummaries.size)
+            // The note is persisted PROCESSING and handed to the worker; the pipeline is NOT run inline.
+            assertEquals(listOf(state.lastRecordingId), scheduler.scheduledIds)
+            assertEquals(RecordingStatus.PROCESSING, repo.upsertedRecordings.last().status)
+            assertTrue(repo.upsertedSummaries.isEmpty())
         }
 
     @Test

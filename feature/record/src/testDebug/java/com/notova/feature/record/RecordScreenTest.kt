@@ -1,5 +1,6 @@
 package com.notova.feature.record
 
+import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -9,10 +10,13 @@ import com.notova.core.pipeline.PipelineUseCase
 import com.notova.core.summarize.StubSummarizer
 import com.notova.core.transcribe.StubTranscriber
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows
 import org.robolectric.annotation.GraphicsMode
 
 /**
@@ -26,11 +30,22 @@ class RecordScreenTest {
     @get:Rule
     val composeRule = createComposeRule()
 
+    /** Grant the recording permissions so tapping Record starts capture instead of prompting. */
+    @Before
+    fun grantPermissions() {
+        Shadows.shadowOf(RuntimeEnvironment.getApplication()).grantPermissions(
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.POST_NOTIFICATIONS,
+        )
+    }
+
     private fun viewModel(audio: FakeAudioSource = FakeAudioSource()) =
         RecordViewModel(
             audio,
             PipelineUseCase(StubTranscriber(), StubSummarizer()),
             FakeRecordingRepository(),
+            FakeRecordingProcessingScheduler(),
+            FakeRecordingForegroundController(),
         )
 
     @Test

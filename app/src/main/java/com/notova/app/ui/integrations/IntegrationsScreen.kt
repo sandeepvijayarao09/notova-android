@@ -86,8 +86,8 @@ internal fun openCustomTab(
 /** Stateless Integrations content, rendered without a Hilt graph for Robolectric/preview. */
 @Composable
 fun IntegrationsContent(
-    state: IntegrationsUiState = IntegrationsUiState(),
     modifier: Modifier = Modifier,
+    state: IntegrationsUiState = IntegrationsUiState(),
     onConnect: (String) -> Unit = {},
     onDisconnect: (String) -> Unit = {},
 ) {

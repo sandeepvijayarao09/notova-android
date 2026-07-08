@@ -60,8 +60,8 @@ fun SignInScreen(
 /** Stateless SignIn content, rendered without a Hilt graph for Robolectric/preview. */
 @Composable
 fun SignInContent(
-    state: SignInUiState = SignInUiState(),
     modifier: Modifier = Modifier,
+    state: SignInUiState = SignInUiState(),
     onEmailChange: (String) -> Unit = {},
     onPasswordChange: (String) -> Unit = {},
     onSignIn: () -> Unit = {},

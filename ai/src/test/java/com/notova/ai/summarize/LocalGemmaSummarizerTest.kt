@@ -97,7 +97,7 @@ class LocalGemmaSummarizerTest {
 
             assertEquals("rec-1", summary.recordingId)
             assertEquals("bullet", summary.style)
-            assertEquals("gemma-mediapipe:gemma.task", summary.model)
+            assertEquals("gemma-litertlm:gemma.task", summary.model)
         }
 
     @Test

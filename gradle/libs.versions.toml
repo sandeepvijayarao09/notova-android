@@ -7,7 +7,9 @@ lifecycle = "2.8.7"
 activityCompose = "1.9.3"
 composeBom = "2024.10.01"
 navigationCompose = "2.8.4"
-hilt = "2.52"
+# 2.57+: Dagger/Hilt's metadata parser (kotlin-metadata-jvm) reads Kotlin 2.2 metadata, which
+# litertlm 0.11.0 brings onto the classpath. Older Hilt (2.52) capped at metadata 2.1.0.
+hilt = "2.57"
 hiltNavigationCompose = "1.2.0"
 coroutines = "1.9.0"
 room = "2.6.1"
@@ -31,6 +33,9 @@ androidxArchCoreTesting = "2.2.0"
 kover = "0.8.3"
 mediapipeGenai = "0.10.35"
 mlkitGenaiSummarization = "1.0.0-beta1"
+# LiteRT-LM: Google's on-device LLM runtime (Engine/Conversation, multimodal incl. audio).
+# Version matches Google AI Edge Gallery, from which the LiteRtLmEngine logic is adapted.
+litertlm = "0.11.0"
 kotlinxCoroutinesGuava = "1.9.0"
 securityCrypto = "1.1.0-alpha06"
 browser = "1.8.0"
@@ -84,6 +89,7 @@ androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx"
 # ---- On-device AI engines (optional, guarded at runtime) ----
 mediapipe-tasks-genai = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipeGenai" }
 mlkit-genai-summarization = { group = "com.google.mlkit", name = "genai-summarization", version.ref = "mlkitGenaiSummarization" }
+litertlm = { group = "com.google.ai.edge.litertlm", name = "litertlm-android", version.ref = "litertlm" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxJunit" }

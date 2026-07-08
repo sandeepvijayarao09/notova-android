@@ -2,9 +2,11 @@ package com.notova.feature.record
 
 import com.notova.core.audio.AudioCaptureResult
 import com.notova.core.audio.AudioSource
+import com.notova.core.audio.RecordingForegroundController
 import com.notova.core.model.Recording
 import com.notova.core.model.RecordingSource
 import com.notova.core.model.Summary
+import com.notova.core.pipeline.RecordingProcessingScheduler
 import com.notova.data.repository.RecordingRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +41,31 @@ class FakeAudioSource(
         lastImportedUri = uri
         importError?.let { throw it }
         return captureResult.copy(source = RecordingSource.FILE)
+    }
+}
+
+/** Records the recording ids handed off for background processing. */
+class FakeRecordingProcessingScheduler : RecordingProcessingScheduler {
+    val scheduledIds = mutableListOf<String>()
+
+    override fun schedule(recordingId: String) {
+        scheduledIds.add(recordingId)
+    }
+}
+
+/** Counts the microphone foreground-service start/stop calls for ViewModel tests. */
+class FakeRecordingForegroundController : RecordingForegroundController {
+    var startCalls = 0
+        private set
+    var stopCalls = 0
+        private set
+
+    override fun start() {
+        startCalls++
+    }
+
+    override fun stop() {
+        stopCalls++
     }
 }
 

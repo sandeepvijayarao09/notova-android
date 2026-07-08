@@ -23,7 +23,7 @@ class SpeechRecognizerTranscriber
 
         override suspend fun transcribe(audioPath: String): Transcript {
             val result = engine.recognize(audioPath)
-            val recordingId = audioPath.substringAfterLast('/').substringBeforeLast('.')
+            val recordingId = recordingIdFromAudioPath(audioPath)
             return Transcript(
                 recordingId = recordingId,
                 language = result.language,

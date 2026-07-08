@@ -4,7 +4,10 @@ package com.notova.ai.model
  * The on-device capability a model file can unlock once it is present in the models directory.
  */
 enum class ModelCapability {
-    /** A Gemma `.task` / `.litertlm` bundle that enables the MediaPipe LLM summarizer. */
+    /**
+     * A Gemma `.litertlm` (or legacy `.task`) bundle. Loaded through LiteRT-LM it powers both the
+     * on-device summarizer and — for Gemma 3n audio bundles — the audio-modality transcriber.
+     */
     GEMMA_SUMMARIZER,
 
     /** A file Notova does not (yet) know how to map to an engine. */
@@ -31,7 +34,7 @@ data class InstalledModel(
  * filesystem dependencies so it is trivially unit-testable.
  */
 object ModelCatalog {
-    /** Extensions that MediaPipe LLM Inference can load as a Gemma bundle. */
+    /** Extensions LiteRT-LM (or legacy MediaPipe) can load as a Gemma bundle. */
     val GEMMA_EXTENSIONS = listOf(".task", ".litertlm", ".bin")
 
     fun capabilityFor(fileName: String): ModelCapability {

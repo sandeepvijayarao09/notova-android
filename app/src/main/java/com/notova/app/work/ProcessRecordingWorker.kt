@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.notova.app.notifications.NotovaNotifications
 import com.notova.core.model.RecordingStatus
 import com.notova.core.pipeline.PipelineUseCase
 import com.notova.data.repository.RecordingRepository
@@ -28,13 +29,18 @@ class ProcessRecordingWorker
             val recording = repository.getRecording(recordingId) ?: return Result.failure()
             val audioPath = recording.localAudioPath ?: return Result.failure()
 
+            NotovaNotifications.notifyProcessing(applicationContext)
             return runCatching {
                 val finished = pipeline.process(audioPath)
                 repository.upsertSummary(finished.summary)
                 repository.upsertRecording(recording.copy(status = RecordingStatus.READY))
             }.fold(
-                onSuccess = { Result.success() },
+                onSuccess = {
+                    NotovaNotifications.notifyNoteReady(applicationContext, recording.title)
+                    Result.success()
+                },
                 onFailure = {
+                    NotovaNotifications.cancelProcessing(applicationContext)
                     repository.upsertRecording(recording.copy(status = RecordingStatus.FAILED))
                     Result.retry()
                 },

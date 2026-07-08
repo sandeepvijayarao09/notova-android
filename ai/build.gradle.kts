@@ -23,6 +23,8 @@ android {
     }
     kotlinOptions {
         jvmTarget = "17"
+        // NOTE: -Xskip-metadata-version-check (needed because litertlm 0.11.0 ships newer Kotlin
+        // metadata) is applied repo-wide in the root build.gradle.kts subprojects block.
     }
 
     testOptions {
@@ -49,6 +51,11 @@ dependencies {
     // even where the native engine / model / AICore is unavailable.
     implementation(libs.mediapipe.tasks.genai)
     implementation(libs.mlkit.genai.summarization)
+
+    // LiteRT-LM: on-device Engine/Conversation runtime used by LiteRtLmEngine for both
+    // Gemma summarization (text) and Gemma 3n audio-modality transcription. The engine
+    // logic is adapted from Google AI Edge Gallery (Apache-2.0); see NOTICE.
+    implementation(libs.litertlm)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

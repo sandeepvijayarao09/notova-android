@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,6 +8,17 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.kover)
 }
+
+// Release signing is driven by a gitignored keystore.properties at the repo root (see
+// keystore.properties.example). Absent it, release builds fall back to the debug key so local
+// and CI builds still assemble.
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties =
+    Properties().apply {
+        if (keystorePropertiesFile.exists()) {
+            keystorePropertiesFile.inputStream().use { load(it) }
+        }
+    }
 
 android {
     namespace = "com.notova.app"
@@ -16,18 +29,38 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
+            signingConfig =
+                if (keystorePropertiesFile.exists()) {
+                    signingConfigs.getByName("release")
+                } else {
+                    // Lets local/CI `assembleRelease` succeed (debug key). A real Play upload
+                    // requires the upload key provided via keystore.properties.
+                    signingConfigs.getByName("debug")
+                }
         }
     }
 
@@ -48,6 +81,13 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
+    }
+
+    lint {
+        // Android Lint's embedded Kotlin (FIR) analyzer crashes parsing some test-only sources
+        // (a known lint bug: "Unexpected failure during lint analysis"). Lint's value is on
+        // production code, so exclude test sources; unit tests are still covered by JUnit + ktlint.
+        ignoreTestSources = true
     }
 
     packaging {

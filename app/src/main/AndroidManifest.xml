@@ -18,14 +18,13 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Notova">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:launchMode="singleTop"
             android:theme="@style/Theme.Notova">
             <intent-filter>
@@ -43,6 +42,13 @@
                     android:scheme="notova" />
             </intent-filter>
         </activity>
+
+        <!-- Microphone foreground service: keeps a live recording running (with an ongoing
+             notification) when the app is backgrounded. -->
+        <service
+            android:name=".record.RecordingService"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
 
         <!-- WorkManager is initialized via Hilt; disable the default initializer. -->
         <provider

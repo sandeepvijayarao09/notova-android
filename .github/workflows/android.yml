@@ -31,6 +31,14 @@ jobs:
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
 
+      - name: Lint (ktlint)
+        run: ./gradlew ktlintCheck
+
       - name: Static analysis (detekt)
         run: ./gradlew detekt
-        continue-on-error: true
+
+      - name: Android Lint (all modules)
+        run: ./gradlew lint
+
+      - name: Assemble release (R8 minify + resource shrink; debug-signed fallback)
+        run: ./gradlew :app:assembleRelease

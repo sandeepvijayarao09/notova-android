@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 // Top-level build file — plugins declared via the version catalog, applied in modules.
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -21,6 +23,16 @@ subprojects {
         buildUponDefaultConfig = true
         config.setFrom(rootProject.files("config/detekt.yml"))
         parallel = true
+    }
+
+    // The :ai module depends on litertlm 0.11.0, which is built for the Kotlin 2.2/2.3 toolchain
+    // (Google AI Edge Gallery's) and transitively brings kotlin-stdlib 2.2.21 onto the classpath.
+    // Notova compiles with Kotlin 2.0.21, so relax the metadata version check repo-wide (also covers
+    // the KSP/Hilt compile tasks). Remove once Notova's Kotlin is bumped to 2.2+.
+    tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions {
+            freeCompilerArgs.add("-Xskip-metadata-version-check")
+        }
     }
 }
 

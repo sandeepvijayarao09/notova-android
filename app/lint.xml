@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!--
+      Adaptive launcher icons (<adaptive-icon>, <monochrome>) must live in a versioned
+      mipmap-anydpi-v26 folder for AAPT2 to compile them with the current AGP; dropping the
+      qualifier breaks the build (resource not found). So the v26 qualifier is NOT obsolete here.
+    -->
+    <issue id="ObsoleteSdkInt">
+        <ignore path="src/main/res/mipmap-anydpi-v26" />
+        <ignore regexp="mipmap-anydpi-v26" />
+    </issue>
+</lint>

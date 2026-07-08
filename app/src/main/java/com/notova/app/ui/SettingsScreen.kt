@@ -54,7 +54,11 @@ private const val SAMPLE_MODEL_NAME = "gemma-2b-it-cpu-int4.task"
 /**
  * Settings tab. Surfaces the currently active on-device engines (and why), plus model management:
  * import via the Storage Access Framework, download with progress, list and delete.
+ *
+ * `@Suppress("Recycle")`: the imported InputStream is consumed and closed downstream by
+ * `ModelStore.import` (which wraps it in `source.use { }`); closing it here would break the async copy.
  */
+@Suppress("Recycle")
 @Composable
 fun SettingsScreen(
     modifier: Modifier = Modifier,
@@ -89,8 +93,8 @@ fun SettingsScreen(
  */
 @Composable
 fun SettingsContent(
-    state: SettingsUiState = SettingsUiState(),
     modifier: Modifier = Modifier,
+    state: SettingsUiState = SettingsUiState(),
     onImport: () -> Unit = {},
     onDownload: () -> Unit = {},
     onDelete: (String) -> Unit = {},

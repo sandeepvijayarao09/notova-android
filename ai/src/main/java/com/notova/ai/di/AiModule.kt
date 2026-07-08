@@ -1,16 +1,20 @@
 package com.notova.ai.di
 
 import android.content.Context
+import com.notova.ai.audio.AudioDecoder
+import com.notova.ai.audio.MediaCodecAudioDecoder
 import com.notova.ai.summarize.GeminiNanoSummarizer
+import com.notova.ai.summarize.LiteRtLmEngine
 import com.notova.ai.summarize.LlmEngine
 import com.notova.ai.summarize.LocalGemmaSummarizer
-import com.notova.ai.summarize.MediaPipeLlmEngine
 import com.notova.ai.summarize.MlKitGenAiSummarizationEngine
 import com.notova.ai.summarize.MlKitSummarizationEngine
 import com.notova.ai.summarize.ResolvingSummarizer
 import com.notova.ai.summarize.StubSummarizerEngine
 import com.notova.ai.summarize.SummarizerEngine
 import com.notova.ai.transcribe.AndroidSpeechRecognitionEngine
+import com.notova.ai.transcribe.AudioTranscriptionEngine
+import com.notova.ai.transcribe.GemmaAudioTranscriber
 import com.notova.ai.transcribe.ResolvingTranscriber
 import com.notova.ai.transcribe.SpeechRecognitionEngine
 import com.notova.ai.transcribe.SpeechRecognizerTranscriber
@@ -42,9 +46,22 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AiModule {
+    // LiteRT-LM is the bound LLM engine (text summarization). If LiteRT-LM init fails on a device,
+    // LocalGemmaSummarizer reports unavailable and ResolvingSummarizer falls through to Gemini Nano
+    // / the stub.
     @Binds
     @Singleton
-    abstract fun bindLlmEngine(impl: MediaPipeLlmEngine): LlmEngine
+    abstract fun bindLlmEngine(impl: LiteRtLmEngine): LlmEngine
+
+    // Same LiteRtLmEngine singleton also serves audio-modality transcription, so one loaded
+    // Gemma model powers both summarization and transcription.
+    @Binds
+    @Singleton
+    abstract fun bindAudioTranscriptionEngine(impl: LiteRtLmEngine): AudioTranscriptionEngine
+
+    @Binds
+    @Singleton
+    abstract fun bindAudioDecoder(impl: MediaCodecAudioDecoder): AudioDecoder
 
     @Binds
     @Singleton
@@ -100,7 +117,8 @@ object AiProvidesModule {
     @Singleton
     @Named("transcriberEngines")
     fun provideTranscriberEngines(
+        gemma: GemmaAudioTranscriber,
         speech: SpeechRecognizerTranscriber,
         stub: StubTranscriberEngine,
-    ): List<@JvmSuppressWildcards TranscriberEngine> = listOf(speech, stub)
+    ): List<@JvmSuppressWildcards TranscriberEngine> = listOf(gemma, speech, stub)
 }

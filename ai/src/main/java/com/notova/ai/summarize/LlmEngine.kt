@@ -1,11 +1,11 @@
 package com.notova.ai.summarize
 
 /**
- * Thin seam over a local large-language-model runtime (MediaPipe LLM Inference in production).
+ * Thin seam over a local large-language-model runtime (LiteRT-LM / Gemma in production).
  *
  * Wrapping the native engine behind this interface keeps [LocalGemmaSummarizer]'s prompt-building,
- * availability mapping and error handling fully unit-testable on the JVM with a fake — no `.task`
- * model, no native `.so`, no device required.
+ * availability mapping and error handling fully unit-testable on the JVM with a fake — no
+ * `.litertlm` model, no native `.so`, no device required.
  */
 interface LlmEngine {
     /**

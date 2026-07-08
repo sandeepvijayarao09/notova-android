@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!--
+      Version-currency advisories, not correctness issues. The on-device AI stack is highly
+      version-sensitive (LiteRT-LM pins the Kotlin/AGP toolchain — see ../NOTICE), so dependency
+      and AGP updates are made deliberately and verified, not chased via lint nags. Currency is
+      tracked outside lint (e.g. a dependency bot), so these checks are silenced to keep lint
+      focused on real defects.
+    -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+</lint>

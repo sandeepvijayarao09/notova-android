@@ -30,21 +30,24 @@ class EncryptedTokenStore internal constructor(
 
     override fun isSignedInBlocking(): Boolean = accessTokenBlocking() != null
 
+    // apply() updates the in-memory cache synchronously (so accessTokenBlocking() reads on the
+    // OkHttp thread are immediately consistent) and flushes to disk off-thread — avoiding the
+    // synchronous disk I/O commit() would run on the caller's thread.
     override suspend fun save(tokens: AuthTokens) {
         prefs.edit()
             .putString(KEY_ACCESS, tokens.accessToken)
             .putString(KEY_REFRESH, tokens.refreshToken)
-            .commit()
+            .apply()
         _tokens.value = tokens
     }
 
     override suspend fun updateAccessToken(accessToken: String) {
-        prefs.edit().putString(KEY_ACCESS, accessToken).commit()
+        prefs.edit().putString(KEY_ACCESS, accessToken).apply()
         _tokens.value = readTokens()
     }
 
     override suspend fun clear() {
-        prefs.edit().clear().commit()
+        prefs.edit().clear().apply()
         _tokens.value = null
     }
 

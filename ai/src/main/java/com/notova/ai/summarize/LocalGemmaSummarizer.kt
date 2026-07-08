@@ -9,8 +9,8 @@ import java.time.Instant
 import javax.inject.Inject
 
 /**
- * On-device [SummarizerEngine] backed by a Gemma `.task` / `.litertlm` bundle run through MediaPipe
- * LLM Inference via [LlmEngine].
+ * On-device [SummarizerEngine] backed by a Gemma `.litertlm` bundle run through LiteRT-LM via
+ * [LlmEngine] (in production, [LiteRtLmEngine]).
  *
  * Availability is fully guarded:
  *  - reports unavailable when no Gemma model is installed in the [ModelStore], and
@@ -81,7 +81,7 @@ class LocalGemmaSummarizer
                 .toList()
 
         companion object {
-            const val ENGINE_NAME = "On-device Gemma (MediaPipe)"
-            const val MODEL_PREFIX = "gemma-mediapipe"
+            const val ENGINE_NAME = "On-device Gemma (LiteRT-LM)"
+            const val MODEL_PREFIX = "gemma-litertlm"
         }
     }

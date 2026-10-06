@@ -4,15 +4,19 @@ Notova for Android — on-device AI voice capture & notes (Kotlin/Jetpack Compos
 mic or audio file; transcribe and summarize **fully on-device**; export to your apps.
 
 The backend exists only for accounts, OAuth integration brokering, metadata sync, and billing — it
-**never** performs AI compute. Transcription (Whisper) and summarization (Gemma 3n E4B) run locally.
-Both are currently **stub implementations** behind interfaces so the real models can drop in later.
+**never** performs AI compute. Transcription and summarization run locally (see
+[On-device AI engines](#on-device-ai-engines)).
+
+**1.0.0 — working on-device pipeline**: record (foreground service) → transcribe → summarize →
+save, with an offline "Continue without an account" mode.
 
 ## Module map
 
 | Module | Type | Responsibility |
 | --- | --- | --- |
 | `:app` | Android application (`com.notova.app`) | `@HiltAndroidApp` `NotovaApp`, `MainActivity` (Compose + Navigation: Record / Notes / Settings), `ProcessRecordingWorker` (WorkManager). Depends on every module. |
-| `:core` | Android library (`com.notova.core`) | Pure domain: models, the on-device pipeline interfaces (`AudioSource`, `Transcriber`, `Summarizer`, `IntegrationExporter`), their stub impls, and `PipelineUseCase`. Hilt `PipelineModule` binds the stubs. |
+| `:core` | Android library (`com.notova.core`) | Pure domain: models, the on-device pipeline interfaces (`AudioSource`, `Transcriber`, `Summarizer`, `IntegrationExporter`), fallback impls, and `PipelineUseCase`. |
+| `:ai` | Android library (`com.notova.ai`) | On-device engines and resolvers: Gemma via LiteRT-LM (transcription + summarization), Gemini Nano via ML Kit GenAI, Android SpeechRecognizer; `ModelStore` / model downloader. Hilt `AiModule` wires the engine chains. Has tests. |
 | `:data` | Android library (`com.notova.data`) | Room database (`Recording` + `Summary` entities/DAOs), `RecordingRepository` impl, DataStore preferences, Hilt modules. |
 | `:design` | Android library (`com.notova.design`) | Compose `NotovaTheme`, typography, shared components. |
 | `:integrations` | Android library (`com.notova.integrations`) | Retrofit `NotovaBackendApi` for the `/v1` contract + DTOs, `IntegrationExporter` impl, networking Hilt module. |
@@ -54,20 +58,24 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@17 ./gradlew detekt ktlintCheck
 Stack: Jetpack Compose (BOM) + Material3, Navigation-Compose, Hilt, Coroutines/Flow, Room,
 DataStore, Retrofit + OkHttp + kotlinx-serialization, WorkManager, KSP. Lint via ktlint + detekt.
 
-## Where Whisper / Gemma plug in
+## On-device AI engines
 
-The pipeline is interface-driven so the real models swap in with zero changes to callers:
+`ResolvingTranscriber` and `ResolvingSummarizer` pick the first available engine at call time, in
+priority order, and expose the active engine to Settings:
 
-- **Whisper (transcription)** — implement `com.notova.core.transcribe.Transcriber` (e.g.
-  `WhisperTranscriber` wrapping whisper.cpp / LiteRT) and rebind it in
-  `com.notova.core.di.PipelineModule` in place of `StubTranscriber`.
-- **Gemma 3n E4B (summarization)** — implement `com.notova.core.summarize.Summarizer` (e.g.
-  `GemmaSummarizer` via MediaPipe LLM Inference / LiteRT) and rebind it in `PipelineModule` in
-  place of `StubSummarizer`.
+| Stage | Engine chain (highest priority first) |
+| --- | --- |
+| **Transcription** | **Gemma 3n audio** via LiteRT-LM (16 kHz mono PCM, ≤30 s windows streamed to the model) → Android on-device `SpeechRecognizer` → built-in fallback |
+| **Summarization** | **Local Gemma** (`.litertlm` bundle via LiteRT-LM) → **Gemini Nano** (ML Kit GenAI Summarization / AICore) → built-in fallback |
+
+One installed Gemma model serves both transcription and summarization. Every engine's availability
+is guarded (no model installed, native load failure, unsupported device), so emulators and older
+phones fall through cleanly. The `SpeechRecognizer` engine's availability checks are real, but
+feeding it a pre-recorded file is still to be wired, so today it defers to the next engine.
 
 `PipelineUseCase` composes `Transcriber` + `Summarizer` (audio file → transcript → summary). The
 Record flow (`RecordViewModel`) and the background `ProcessRecordingWorker` both depend only on
-`PipelineUseCase`, so dropping in real models requires editing only the Hilt bindings.
+`PipelineUseCase`, so a new engine (e.g. Whisper) is one class plus one entry in `AiModule`.
 
 ### Backend `/v1` contract
 

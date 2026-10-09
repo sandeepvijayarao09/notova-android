@@ -7,7 +7,7 @@ import com.notova.core.model.Transcript
  * Produces a [Summary] from a [Transcript], fully on-device.
  *
  * The production implementation will wrap Gemma 3n E4B via MediaPipe LLM Inference / LiteRT.
- * Until then [StubSummarizer] returns templated markdown + naive action items.
+ * With no model available, [StubSummarizer] produces a basic, clearly labelled extractive summary.
  */
 interface Summarizer {
     suspend fun summarize(

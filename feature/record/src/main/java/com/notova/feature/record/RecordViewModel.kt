@@ -29,8 +29,10 @@ data class RecordUiState(
 )
 
 /**
- * Drives the Record screen end-to-end with the current stub pipeline:
+ * Drives the Record screen end-to-end:
  * capture -> persist (PROCESSING) -> [PipelineUseCase] -> persist summary + mark READY.
+ * If no transcription engine is available the recording is kept, marked FAILED, and the user is
+ * told why; nothing is invented.
  */
 @HiltViewModel
 class RecordViewModel

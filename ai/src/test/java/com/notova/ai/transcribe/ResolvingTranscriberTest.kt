@@ -1,9 +1,11 @@
 package com.notova.ai.transcribe
 
+import com.notova.core.transcribe.TranscriptionUnavailableException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 
 /**
@@ -73,5 +75,28 @@ class ResolvingTranscriberTest {
 
             assertEquals(0, speech.transcribeCount)
             assertEquals(1, stub.transcribeCount)
+        }
+
+    @Test
+    fun `no available engine reports transcription unavailable instead of inventing text`() =
+        runTest {
+            val gemma = FakeTranscriberEngine("gemma", available = false)
+            val speech = FakeTranscriberEngine("speech", available = false)
+            val resolver = resolver(gemma, speech)
+
+            try {
+                resolver.transcribe("/audio/x.m4a")
+                fail("expected TranscriptionUnavailableException")
+            } catch (e: TranscriptionUnavailableException) {
+                assertTrue(e.message!!.startsWith("Transcription unavailable"))
+            }
+            assertEquals(0, gemma.transcribeCount + speech.transcribeCount)
+            assertNull(resolver.activeEngine.value)
+        }
+
+    @Test
+    fun `resolve returns null when no engine can run`() =
+        runTest {
+            assertNull(resolver(FakeTranscriberEngine("speech", available = false)).resolve())
         }
 }

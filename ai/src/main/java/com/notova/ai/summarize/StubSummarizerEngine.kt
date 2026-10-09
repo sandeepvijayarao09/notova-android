@@ -6,9 +6,9 @@ import com.notova.core.summarize.StubSummarizer
 import javax.inject.Inject
 
 /**
- * Always-available [SummarizerEngine] that delegates to the core [StubSummarizer]. This is the
- * guaranteed fallback at the end of the resolver chain, so the pipeline always produces a summary
- * even when no on-device model and no AICore feature are present.
+ * Always-available [SummarizerEngine] that delegates to the core [StubSummarizer], a basic extractive
+ * summary labelled "no AI model". It is the last link in the chain, so a transcript always gets at
+ * least that, even when no on-device model and no AICore feature are present.
  */
 class StubSummarizerEngine
     @Inject
@@ -25,6 +25,6 @@ class StubSummarizerEngine
         ): Summary = delegate.summarize(transcript, style)
 
         companion object {
-            const val ENGINE_NAME = "Built-in (template)"
+            const val ENGINE_NAME = "Basic summary (no AI model)"
         }
     }

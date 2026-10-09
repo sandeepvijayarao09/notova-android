@@ -9,9 +9,8 @@ import com.notova.ai.summarize.ResolvingSummarizer
 import com.notova.ai.summarize.StubSummarizerEngine
 import com.notova.ai.summarize.SummarizerEngine
 import com.notova.ai.transcribe.ResolvingTranscriber
-import com.notova.ai.transcribe.StubTranscriberEngine
+import com.notova.ai.transcribe.TranscriberEngine
 import com.notova.core.summarize.StubSummarizer
-import com.notova.core.transcribe.StubTranscriber
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -45,6 +44,15 @@ class SettingsViewModelTest {
         override suspend fun summarize(text: String) = "summary"
     }
 
+    /** A transcription engine that can never run (no model installed, no speech service). */
+    private class UnavailableTranscriberEngine : TranscriberEngine {
+        override val engineName = "Gemma 3n audio"
+
+        override suspend fun isAvailable() = false
+
+        override suspend fun transcribe(audioPath: String) = error("unavailable engine must not run")
+    }
+
     private fun viewModel(
         nanoStatus: GenAiFeatureStatus = GenAiFeatureStatus.UNAVAILABLE,
     ): Pair<SettingsViewModel, ModelStore> {
@@ -58,20 +66,20 @@ class SettingsViewModelTest {
                 listOf<SummarizerEngine>(nano, StubSummarizerEngine(StubSummarizer())),
             )
         val transcriber =
-            ResolvingTranscriber(listOf(StubTranscriberEngine(StubTranscriber())))
+            ResolvingTranscriber(listOf(UnavailableTranscriberEngine()))
         val downloader = ModelDownloader(OkHttpClient.Builder().build(), store, dispatcher)
         return SettingsViewModel(summarizer, transcriber, nano, store, downloader) to store
     }
 
     @Test
-    fun `initial refresh resolves the stub engines when nothing else is available`() =
+    fun `with nothing installed, summaries are basic and transcription is unavailable`() =
         runTest(mainDispatcherRule.dispatcher) {
             val (vm, _) = viewModel()
             advanceUntilIdle()
 
             val state = vm.uiState.value
             assertEquals(StubSummarizerEngine.ENGINE_NAME, state.summarizerEngine)
-            assertEquals(StubTranscriberEngine.ENGINE_NAME, state.transcriberEngine)
+            assertEquals(SettingsViewModel.UNAVAILABLE, state.transcriberEngine)
         }
 
     @Test

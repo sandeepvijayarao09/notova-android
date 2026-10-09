@@ -21,7 +21,7 @@ class StubSummarizerEngineTest {
 
     @Test
     fun `has a readable engine name`() {
-        assertEquals("Built-in (template)", StubSummarizerEngine(StubSummarizer()).engineName)
+        assertEquals("Basic summary (no AI model)", StubSummarizerEngine(StubSummarizer()).engineName)
     }
 
     @Test
@@ -29,7 +29,7 @@ class StubSummarizerEngineTest {
         runTest {
             val summary = StubSummarizerEngine(StubSummarizer()).summarize(transcript(), "concise")
             assertEquals("rec-1", summary.recordingId)
-            assertEquals("stub-summarizer-v0", summary.model)
+            assertEquals("basic-extractive-v1", summary.model)
             assertTrue(summary.contentMarkdown.contains("Summary"))
         }
 }

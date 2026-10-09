@@ -41,7 +41,7 @@ object RecordScreenTags {
 
 /**
  * Record tab. Drives capture/import through [RecordViewModel] so the full on-device pipeline
- * (currently stubbed) runs and persists a finished note.
+ * runs on-device and persists a finished note.
  */
 @Composable
 fun RecordScreen(

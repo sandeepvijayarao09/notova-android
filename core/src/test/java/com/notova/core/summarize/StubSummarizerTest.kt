@@ -39,10 +39,12 @@ class StubSummarizerTest {
         }
 
     @Test
-    fun `markdown embeds the recording id`() =
+    fun `markdown says no AI model produced it and never calls itself a placeholder`() =
         runTest {
             val summary = summarize("Body text.")
-            assertTrue(summary.contentMarkdown.contains("`rec-1`"))
+            assertTrue(summary.contentMarkdown.contains("no on-device AI model was available"))
+            assertFalse(summary.contentMarkdown.contains("placeholder", ignoreCase = true))
+            assertFalse(summary.contentMarkdown.contains("stub", ignoreCase = true))
         }
 
     @Test
@@ -69,7 +71,7 @@ class StubSummarizerTest {
     fun `summary carries the model name and style through`() =
         runTest {
             val summary = summarize("x.", style = "bullet")
-            assertEquals("stub-summarizer-v0", summary.model)
+            assertEquals("basic-extractive-v1", summary.model)
             assertEquals("bullet", summary.style)
             assertEquals("rec-1", summary.recordingId)
         }

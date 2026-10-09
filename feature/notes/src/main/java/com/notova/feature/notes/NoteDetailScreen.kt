@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.notova.core.model.RecordingStatus
 
 @Composable
 fun NoteDetailScreen(
@@ -50,6 +51,11 @@ fun NoteDetailScreen(
                             Text(text = "${if (item.done) "[x]" else "[ ]"} ${item.text}")
                         }
                     }
+                } else if (state.recording?.status == RecordingStatus.FAILED) {
+                    Text(
+                        "No transcript. On-device transcription was unavailable for this recording " +
+                            "(install a Gemma 3n model in Settings). The audio is saved.",
+                    )
                 } else {
                     Text("No summary yet.")
                 }

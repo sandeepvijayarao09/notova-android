@@ -2,6 +2,7 @@ package com.notova.ai.transcribe
 
 import com.notova.core.model.Transcript
 import com.notova.core.transcribe.Transcriber
+import com.notova.core.transcribe.TranscriptionUnavailableException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +19,9 @@ import javax.inject.Singleton
  * Priority (highest first):
  *  1. [GemmaAudioTranscriber]       — Gemma 3n audio modality via LiteRT-LM, when a model is installed.
  *  2. [SpeechRecognizerTranscriber] — Android on-device speech recognition, when available.
- *  3. [StubTranscriberEngine]       — always available placeholder fallback.
+ *
+ * There is deliberately no always-available fallback. If no engine is available, [transcribe]
+ * throws [TranscriptionUnavailableException] and the UI says so instead of showing invented text.
  *
  * A dedicated Whisper engine could slot in at the front of this list with no other change. The list
  * is injected so tests can supply fakes.
@@ -34,24 +37,26 @@ class ResolvingTranscriber
         /** Name of the engine that handled the most recent request; null until the first transcribe. */
         val activeEngine: StateFlow<String?> = _activeEngine.asStateFlow()
 
-        /** Resolves (without transcribing) the engine that would currently handle a request. */
-        suspend fun resolve(): TranscriberEngine {
-            val chosen = engines.firstOrNull { runCatching { it.isAvailable() }.getOrDefault(false) }
-            return chosen ?: engines.last()
-        }
+        /**
+         * Resolves (without transcribing) the engine that would currently handle a request, or null
+         * when no engine can run on this device.
+         */
+        suspend fun resolve(): TranscriberEngine? =
+            engines.firstOrNull { runCatching { it.isAvailable() }.getOrDefault(false) }
 
         // Intentionally catches Throwable: a fallback resolver must survive ANY engine
         // failure and try the next one (CancellationException is rethrown for coroutine safety).
         @Suppress("TooGenericExceptionCaught")
         override suspend fun transcribe(audioPath: String): Transcript {
-            val candidates =
-                engines
-                    .filter { runCatching { it.isAvailable() }.getOrDefault(false) }
-                    .ifEmpty { listOf(engines.last()) }
+            val candidates = engines.filter { runCatching { it.isAvailable() }.getOrDefault(false) }
+            if (candidates.isEmpty()) {
+                _activeEngine.value = null
+                throw TranscriptionUnavailableException()
+            }
 
             // Try each available engine in order; if one reports available but throws
             // at runtime (e.g. SpeechRecognizer with no offline data / a file source it
-            // can't consume), fall back to the next. The stub never throws.
+            // can't consume), fall back to the next.
             var lastError: Throwable? = null
             for (engine in candidates) {
                 try {

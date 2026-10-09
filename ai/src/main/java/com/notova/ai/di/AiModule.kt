@@ -18,7 +18,6 @@ import com.notova.ai.transcribe.GemmaAudioTranscriber
 import com.notova.ai.transcribe.ResolvingTranscriber
 import com.notova.ai.transcribe.SpeechRecognitionEngine
 import com.notova.ai.transcribe.SpeechRecognizerTranscriber
-import com.notova.ai.transcribe.StubTranscriberEngine
 import com.notova.ai.transcribe.TranscriberEngine
 import com.notova.core.summarize.Summarizer
 import com.notova.core.transcribe.Transcriber
@@ -41,14 +40,15 @@ import javax.inject.Singleton
  * This module OWNS the [Transcriber] / [Summarizer] bindings (formerly bound to stubs in
  * `:core`'s PipelineModule). The Record flow, worker, and pipeline depend only on those interfaces,
  * so swapping in the resolvers required no change to callers. Each binding is to a resolver that
- * picks the first available engine at call time and degrades to the always-available stub engine.
+ * picks the first available engine at call time. Summaries degrade to a basic extractive summary;
+ * transcription has no fake fallback and reports itself unavailable instead.
  */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class AiModule {
     // LiteRT-LM is the bound LLM engine (text summarization). If LiteRT-LM init fails on a device,
     // LocalGemmaSummarizer reports unavailable and ResolvingSummarizer falls through to Gemini Nano
-    // / the stub.
+    // / the basic summary.
     @Binds
     @Singleton
     abstract fun bindLlmEngine(impl: LiteRtLmEngine): LlmEngine
@@ -119,6 +119,5 @@ object AiProvidesModule {
     fun provideTranscriberEngines(
         gemma: GemmaAudioTranscriber,
         speech: SpeechRecognizerTranscriber,
-        stub: StubTranscriberEngine,
-    ): List<@JvmSuppressWildcards TranscriberEngine> = listOf(gemma, speech, stub)
+    ): List<@JvmSuppressWildcards TranscriberEngine> = listOf(gemma, speech)
 }

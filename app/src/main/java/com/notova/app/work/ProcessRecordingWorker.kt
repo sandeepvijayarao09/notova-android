@@ -7,6 +7,7 @@ import androidx.work.WorkerParameters
 import com.notova.app.notifications.NotovaNotifications
 import com.notova.core.model.RecordingStatus
 import com.notova.core.pipeline.PipelineUseCase
+import com.notova.core.transcribe.TranscriptionUnavailableException
 import com.notova.data.repository.RecordingRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -39,10 +40,11 @@ class ProcessRecordingWorker
                     NotovaNotifications.notifyNoteReady(applicationContext, recording.title)
                     Result.success()
                 },
-                onFailure = {
+                onFailure = { error ->
                     NotovaNotifications.cancelProcessing(applicationContext)
                     repository.upsertRecording(recording.copy(status = RecordingStatus.FAILED))
-                    Result.retry()
+                    // Retrying cannot help until the user installs a model; keep the audio and stop.
+                    if (error is TranscriptionUnavailableException) Result.failure() else Result.retry()
                 },
             )
         }

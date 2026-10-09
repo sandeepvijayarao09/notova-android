@@ -61,7 +61,8 @@ class SettingsViewModel
         fun refresh() {
             viewModelScope.launch {
                 val summarizer = runCatching { resolvingSummarizer.resolve().engineName }.getOrDefault(UNKNOWN)
-                val transcriber = runCatching { resolvingTranscriber.resolve().engineName }.getOrDefault(UNKNOWN)
+                val transcriber =
+                    runCatching { resolvingTranscriber.resolve()?.engineName ?: UNAVAILABLE }.getOrDefault(UNKNOWN)
                 val nanoStatus = runCatching { geminiNano.featureStatus().name }.getOrDefault(UNKNOWN)
                 val models = runCatching { modelStore.list() }.getOrDefault(emptyList())
                 _uiState.update {
@@ -127,7 +128,8 @@ class SettingsViewModel
             }
         }
 
-        private companion object {
-            const val UNKNOWN = "Unknown"
+        companion object {
+            private const val UNKNOWN = "Unknown"
+            const val UNAVAILABLE = "Unavailable (no model installed)"
         }
     }

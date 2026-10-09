@@ -7,6 +7,8 @@ import com.notova.core.model.RecordingStatus
 import com.notova.core.pipeline.PipelineUseCase
 import com.notova.core.summarize.StubSummarizer
 import com.notova.core.transcribe.StubTranscriber
+import com.notova.core.transcribe.Transcriber
+import com.notova.core.transcribe.TranscriptionUnavailableException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -158,6 +160,28 @@ class RecordViewModelTest {
 
             assertEquals(RecordPhase.ERROR, vm.uiState.value.phase)
             assertEquals("stop failed", vm.uiState.value.message)
+        }
+
+    @Test
+    fun `unavailable transcription keeps the audio, saves no summary, and says why`() =
+        runTest(mainDispatcherRule.dispatcher) {
+            val repo = FakeRecordingRepository()
+            val unavailable =
+                object : Transcriber {
+                    override suspend fun transcribe(audioPath: String) = throw TranscriptionUnavailableException()
+                }
+            val vm = viewModel(repository = repo, pipeline = PipelineUseCase(unavailable, StubSummarizer()))
+
+            vm.startRecording()
+            advanceUntilIdle()
+            vm.stopRecording()
+            advanceUntilIdle()
+
+            assertEquals(RecordPhase.ERROR, vm.uiState.value.phase)
+            assertEquals(TranscriptionUnavailableException.DEFAULT_MESSAGE, vm.uiState.value.message)
+            val saved = repo.upsertedRecordings.last()
+            assertEquals(RecordingStatus.FAILED, saved.status)
+            assertNotNull(saved.localAudioPath)
         }
 
     @Test

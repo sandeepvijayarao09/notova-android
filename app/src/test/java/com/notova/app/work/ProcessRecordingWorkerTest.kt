@@ -14,6 +14,7 @@ import com.notova.core.summarize.StubSummarizer
 import com.notova.core.summarize.Summarizer
 import com.notova.core.transcribe.StubTranscriber
 import com.notova.core.transcribe.Transcriber
+import com.notova.core.transcribe.TranscriptionUnavailableException
 import com.notova.data.repository.RecordingRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -129,6 +130,23 @@ class ProcessRecordingWorkerTest {
             assertEquals(RecordingStatus.FAILED, repository.getRecording("a")?.status)
             assertTrue(repository.upsertedSummaries.isEmpty())
         }
+
+    @Test
+    fun `unavailable transcription fails without retry and keeps the recording FAILED`() =
+        runBlocking {
+            repository.seed(recording("b"))
+            val result = buildWorker("b", pipeline(transcriber = UnavailableTranscriber())).doWork()
+
+            assertEquals(ListenableWorker.Result.failure(), result)
+            assertEquals(RecordingStatus.FAILED, repository.getRecording("b")?.status)
+            assertEquals("/cache/b.m4a", repository.getRecording("b")?.localAudioPath)
+            assertTrue(repository.upsertedSummaries.isEmpty())
+        }
+
+    private class UnavailableTranscriber : Transcriber {
+        override suspend fun transcribe(audioPath: String): com.notova.core.model.Transcript =
+            throw TranscriptionUnavailableException()
+    }
 
     /** Transcriber that always throws, to drive the worker's failure branch. */
     private class FailingTranscriber : Transcriber {

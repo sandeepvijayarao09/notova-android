@@ -3,13 +3,13 @@ package com.notova.core.summarize
 import com.notova.core.model.ActionItem
 import com.notova.core.model.Summary
 import com.notova.core.model.Transcript
-import kotlinx.coroutines.delay
 import java.time.Instant
 import javax.inject.Inject
 
 /**
- * Placeholder [Summarizer]. Emits templated markdown plus naive action items extracted from
- * sentences containing action-ish keywords. Replace with a Gemma 3n E4B implementation later.
+ * Basic extractive [Summarizer], used when no on-device AI model is available. It never invents
+ * content: it quotes the start of the real transcript and lists transcript sentences that contain
+ * action-ish keywords, and it says plainly that no AI model produced it.
  */
 class StubSummarizer
     @Inject
@@ -18,16 +18,14 @@ class StubSummarizer
             transcript: Transcript,
             style: String,
         ): Summary {
-            delay(SIMULATED_LATENCY_MS)
-
             val actionItems = extractActionItems(transcript.fullText)
             val markdown =
                 buildString {
                     appendLine("## Summary ($style)")
                     appendLine()
                     appendLine(
-                        "This is a placeholder summary produced by StubSummarizer for recording " +
-                            "`${transcript.recordingId}`.",
+                        "_Basic summary: no on-device AI model was available, so this is the start of " +
+                            "the transcript plus sentences that look like action items._",
                     )
                     appendLine()
                     appendLine("**Transcript preview:** ${transcript.fullText.take(PREVIEW_CHARS)}")
@@ -57,9 +55,8 @@ class StubSummarizer
                 .map { ActionItem(text = it) }
 
         private companion object {
-            const val SIMULATED_LATENCY_MS = 300L
             const val PREVIEW_CHARS = 160
-            const val MODEL_NAME = "stub-summarizer-v0"
+            const val MODEL_NAME = "basic-extractive-v1"
             val ACTION_KEYWORDS = listOf("todo", "follow up", "need to", "should", "action", "remember to")
         }
     }

@@ -19,7 +19,7 @@ import javax.inject.Singleton
  * Priority (highest first):
  *  1. [LocalGemmaSummarizer]  — a local Gemma model is installed (best on-device quality).
  *  2. [GeminiNanoSummarizer]  — Gemini Nano / AICore is AVAILABLE on this device.
- *  3. [StubSummarizerEngine]  — always available templated fallback.
+ *  3. [StubSummarizerEngine]  — always available basic extractive summary (no AI model).
  *
  * The list is injected, so tests can supply fakes with arbitrary availability permutations.
  */

@@ -21,8 +21,9 @@ import kotlin.system.measureTimeMillis
  * [AudioSource] backed by [MediaRecorder] for capture, with Bluetooth SCO routing when a BT mic
  * is selected, and Storage Access Framework import via [loadFromUri].
  *
- * This is a working scaffold: it records real audio to the app cache and copies imported files.
- * Routing to "OTHER" arbitrary input devices is left as a TODO once device enumeration is wired.
+ * It records real audio to the app cache and copies imported files. Input is the default mic, or a
+ * Bluetooth headset mic over SCO when one is connected; other USB/wired input devices are not
+ * selectable yet and record through the system default route.
  */
 class MediaRecorderAudioSource
     @Inject

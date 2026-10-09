@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -34,7 +33,6 @@ object SettingsScreenTags {
     const val TRANSCRIBER_ENGINE = "settings_transcriber_engine"
     const val GEMINI_NANO_STATUS = "settings_gemini_nano_status"
     const val IMPORT_MODEL_BUTTON = "settings_import_model_button"
-    const val DOWNLOAD_MODEL_BUTTON = "settings_download_model_button"
     const val DOWNLOAD_PROGRESS = "settings_download_progress"
     const val MODELS_LIST = "settings_models_list"
     const val NO_MODELS = "settings_no_models"
@@ -42,14 +40,6 @@ object SettingsScreenTags {
 
     fun deleteModel(name: String): String = "settings_delete_model_$name"
 }
-
-/**
- * A small Gemma model offered for one-tap download when only the stub summarizer is available.
- * Deliberately a modest CPU `.task` bundle (a few hundred MB), not a multi-GB asset.
- */
-private const val SAMPLE_MODEL_URL =
-    "https://storage.googleapis.com/notova-models/gemma-2b-it-cpu-int4.task"
-private const val SAMPLE_MODEL_NAME = "gemma-2b-it-cpu-int4.task"
 
 /**
  * Settings tab. Surfaces the currently active on-device engines (and why), plus model management:
@@ -82,7 +72,6 @@ fun SettingsScreen(
         state = state,
         modifier = modifier,
         onImport = { importLauncher.launch(arrayOf("*/*")) },
-        onDownload = { viewModel.downloadModel(SAMPLE_MODEL_URL, SAMPLE_MODEL_NAME) },
         onDelete = viewModel::deleteModel,
         onSignOut = onSignOut,
     )
@@ -96,7 +85,6 @@ fun SettingsContent(
     modifier: Modifier = Modifier,
     state: SettingsUiState = SettingsUiState(),
     onImport: () -> Unit = {},
-    onDownload: () -> Unit = {},
     onDelete: (String) -> Unit = {},
     onSignOut: () -> Unit = {},
 ) {
@@ -123,21 +111,17 @@ fun SettingsContent(
         )
 
         Text(text = "Models", style = MaterialTheme.typography.titleMedium)
-        Text(text = "Add a Gemma model to enable higher-quality on-device summaries.")
+        Text(
+            text =
+                "Transcription needs a Gemma 3n .litertlm model (from Hugging Face " +
+                    "litert-community). Download it, then import the file here.",
+        )
 
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(
-                onClick = onImport,
-                modifier = Modifier.testTag(SettingsScreenTags.IMPORT_MODEL_BUTTON),
-            ) {
-                Text("Import model")
-            }
-            Button(
-                onClick = onDownload,
-                modifier = Modifier.testTag(SettingsScreenTags.DOWNLOAD_MODEL_BUTTON),
-            ) {
-                Text("Download Gemma")
-            }
+        OutlinedButton(
+            onClick = onImport,
+            modifier = Modifier.testTag(SettingsScreenTags.IMPORT_MODEL_BUTTON),
+        ) {
+            Text("Import model file")
         }
 
         state.download?.let { dl ->
@@ -154,7 +138,7 @@ fun SettingsContent(
 
         if (state.models.isEmpty()) {
             Text(
-                text = "No models installed. Using the built-in engines.",
+                text = "No models installed. Recordings are saved, but transcription is unavailable.",
                 modifier = Modifier.testTag(SettingsScreenTags.NO_MODELS),
             )
         } else {

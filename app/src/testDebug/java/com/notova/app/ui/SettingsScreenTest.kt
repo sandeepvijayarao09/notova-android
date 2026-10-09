@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.notova.ai.model.InstalledModel
 import com.notova.ai.model.ModelCapability
 import org.junit.Assert.assertEquals
@@ -51,22 +52,22 @@ class SettingsScreenTest {
             SettingsContent(
                 state =
                     SettingsUiState(
-                        summarizerEngine = "Built-in (template)",
-                        transcriberEngine = "Built-in (placeholder)",
+                        summarizerEngine = "Basic summary (no AI model)",
+                        transcriberEngine = "Unavailable (no model installed)",
                         geminiNanoStatus = "UNAVAILABLE",
                     ),
             )
         }
         composeRule.onNodeWithTag(SettingsScreenTags.SUMMARIZER_ENGINE).assertIsDisplayed()
-        composeRule.onNodeWithText("Summarizer: Built-in (template)").assertIsDisplayed()
-        composeRule.onNodeWithText("Transcriber: Built-in (placeholder)").assertIsDisplayed()
+        composeRule.onNodeWithText("Summarizer: Basic summary (no AI model)").assertIsDisplayed()
+        composeRule.onNodeWithText("Transcriber: Unavailable (no model installed)").assertIsDisplayed()
         composeRule.onNodeWithText("Gemini Nano: UNAVAILABLE").assertIsDisplayed()
     }
 
     @Test
     fun `shows the no-models message when nothing is installed`() {
         composeRule.setContent { SettingsContent(state = SettingsUiState(models = emptyList())) }
-        composeRule.onNodeWithTag(SettingsScreenTags.NO_MODELS).assertIsDisplayed()
+        composeRule.onNodeWithTag(SettingsScreenTags.NO_MODELS).performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -80,8 +81,8 @@ class SettingsScreenTest {
             )
         composeRule.setContent { SettingsContent(state = SettingsUiState(models = listOf(model))) }
         composeRule.onNodeWithTag(SettingsScreenTags.MODELS_LIST).assertIsDisplayed()
-        composeRule.onNodeWithText("gemma.task").assertIsDisplayed()
-        composeRule.onNodeWithTag(SettingsScreenTags.deleteModel("gemma.task")).assertIsDisplayed()
+        composeRule.onNodeWithText("gemma.task").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithTag(SettingsScreenTags.deleteModel("gemma.task")).performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -92,7 +93,7 @@ class SettingsScreenTest {
         composeRule.setContent {
             SettingsContent(state = SettingsUiState(models = listOf(model)), onDelete = { deleted = it })
         }
-        composeRule.onNodeWithTag(SettingsScreenTags.deleteModel("m.task")).performClick()
+        composeRule.onNodeWithTag(SettingsScreenTags.deleteModel("m.task")).performScrollTo().performClick()
         assertEquals("m.task", deleted)
     }
 

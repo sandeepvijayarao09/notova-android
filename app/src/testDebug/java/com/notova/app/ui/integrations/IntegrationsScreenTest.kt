@@ -70,13 +70,13 @@ class IntegrationsScreenTest {
                 state =
                     IntegrationsUiState(
                         loading = false,
-                        providers = listOf(IntegrationProvider("todoist", connected = false)),
+                        providers = listOf(IntegrationProvider("slack", connected = false)),
                     ),
                 onConnect = { connected = it },
             )
         }
-        composeRule.onNodeWithTag(IntegrationsScreenTags.connect("todoist")).performClick()
-        assertEquals("todoist", connected)
+        composeRule.onNodeWithTag(IntegrationsScreenTags.connect("slack")).performClick()
+        assertEquals("slack", connected)
     }
 
     @Test

@@ -70,7 +70,7 @@ class IntegrationsViewModelTest {
 
     @Test
     fun `init lists providers with connected status`() {
-        enqueue(200, """[{"provider":"notion","connected":true},{"provider":"todoist","connected":false}]""")
+        enqueue(200, """[{"provider":"notion","connected":true},{"provider":"slack","connected":false}]""")
 
         val vm = viewModel()
         val state = waitForState(supplier = { vm.uiState.value }) { !it.loading && it.providers.isNotEmpty() }

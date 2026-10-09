@@ -95,7 +95,7 @@ class ExportViewModelTest {
 
     @Test
     fun `opening the picker filters to connected providers`() {
-        enqueue(200, """[{"provider":"notion","connected":true},{"provider":"todoist","connected":false}]""")
+        enqueue(200, """[{"provider":"notion","connected":true},{"provider":"slack","connected":false}]""")
 
         viewModel.openPicker()
         val state = waitForState(supplier = { viewModel.uiState.value }) { !it.loadingProviders }

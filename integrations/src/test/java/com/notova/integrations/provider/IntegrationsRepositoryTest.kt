@@ -62,7 +62,7 @@ class IntegrationsRepositoryTest {
         runBlocking {
             enqueue(
                 200,
-                """[{"provider":"notion","connected":true},{"provider":"todoist","connected":false}]""",
+                """[{"provider":"notion","connected":true},{"provider":"slack","connected":false}]""",
             )
 
             val result = repository.list()
@@ -71,7 +71,7 @@ class IntegrationsRepositoryTest {
             val providers = (result as IntegrationsListResult.Success).providers
             assertEquals(2, providers.size)
             assertEquals(IntegrationProvider("notion", true), providers[0])
-            assertEquals(IntegrationProvider("todoist", false), providers[1])
+            assertEquals(IntegrationProvider("slack", false), providers[1])
             assertEquals("/v1/integrations", server.takeRequest().path)
         }
 

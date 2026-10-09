@@ -70,7 +70,7 @@ enum class IntegrationExportStatus {
     FAILED,
 }
 
-/** Record of a note being exported to an external provider (Notion, Todoist, etc.). */
+/** Record of a note being exported to an external provider (Notion, Slack, etc.). */
 data class IntegrationExport(
     val recordingId: String,
     val provider: String,

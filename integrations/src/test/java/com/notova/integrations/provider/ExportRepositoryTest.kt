@@ -129,7 +129,7 @@ class ExportRepositoryTest {
                 MockResponse().setResponseCode(200).setBody("""{"externalId":"ext-2","status":"queued"}"""),
             )
 
-            val result = repository.export("todoist", recording(), summary(), transcript())
+            val result = repository.export("slack", recording(), summary(), transcript())
 
             assertTrue(result is ExportResult.Success)
             val success = result as ExportResult.Success

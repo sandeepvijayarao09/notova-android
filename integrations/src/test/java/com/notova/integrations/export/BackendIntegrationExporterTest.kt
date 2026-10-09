@@ -89,9 +89,9 @@ class BackendIntegrationExporterTest {
     }
 
     @Test
-    fun `supports notion todoist and google_tasks`() {
+    fun `supports exactly the backend's providers`() {
         assertEquals(
-            setOf("notion", "todoist", "google_tasks"),
+            setOf("notion", "google", "slack", "salesforce"),
             BackendIntegrationExporter(FakeApi()).supportedProviders,
         )
     }
@@ -165,7 +165,7 @@ class BackendIntegrationExporterTest {
         runBlocking {
             listOf("queued", "pending", "processing", "QUEUED").forEach { status ->
                 val api = FakeApi(response = ExportResponse(externalId = "e", status = status))
-                val result = BackendIntegrationExporter(api).export("todoist", summary())
+                val result = BackendIntegrationExporter(api).export("slack", summary())
                 assertEquals("status=$status", IntegrationExportStatus.PENDING, result.status)
             }
         }

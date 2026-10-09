@@ -29,7 +29,9 @@ class BackendIntegrationExporter
     constructor(
         private val api: NotovaBackendApi,
     ) : IntegrationExporter {
-        override val supportedProviders: Set<String> = setOf("notion", "todoist", "google_tasks")
+        // Must match PROVIDER_IDS in notova-backend (src/modules/integrations/providers/index.ts).
+        // Notion export is implemented server-side; the others connect but export returns 501.
+        override val supportedProviders: Set<String> = setOf("notion", "google", "slack", "salesforce")
 
         override suspend fun export(
             provider: String,

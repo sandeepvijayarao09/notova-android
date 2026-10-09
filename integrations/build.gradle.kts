@@ -13,7 +13,11 @@ android {
 
     defaultConfig {
         minSdk = 26
-        buildConfigField("String", "BACKEND_BASE_URL", "\"https://api.notova.app/\"")
+        // notova-backend base URL. There is no public deployment, so the default is a local
+        // `npm run dev` server as seen from the Android emulator (10.0.2.2 = the host machine).
+        // Override: ./gradlew assembleDebug -Pnotova.backendUrl=https://your-host/
+        val backendUrl = (findProperty("notova.backendUrl") as String?) ?: "http://10.0.2.2:8787/"
+        buildConfigField("String", "BACKEND_BASE_URL", "\"$backendUrl\"")
     }
 
     buildFeatures {

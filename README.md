@@ -3,6 +3,14 @@
 [![Android CI](https://github.com/sandeepvijayarao09/notova-android/actions/workflows/android.yml/badge.svg)](https://github.com/sandeepvijayarao09/notova-android/actions/workflows/android.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
+## In 30 seconds
+- **What it is:** An Android app that records a meeting or voice memo and turns it into a transcript and summary.
+- **Why it matters:** Gemma runs on the phone, so recordings are transcribed and summarized without sending audio to an AI service.
+- **Key result:** 356 unit and Robolectric (Android tests without an emulator) tests run in CI on every push. One Gemma 3n model file powers both transcription and summaries. Status: v1.0.0 with test-signed APKs.
+- **What I did:** Solo project: built the app, its on-device AI engines and tests.
+- **Built with:** Kotlin, Jetpack Compose, Gemma 3n via LiteRT-LM, Gemini Nano (ML Kit GenAI), Hilt, Room, WorkManager.
+- **Try it:** See the screenshots below, or build with `./gradlew :app:assembleDebug` (JDK 17) and import a Gemma 3n model in Settings.
+
 Record a meeting or voice memo, and Notova transcribes and summarizes it on the phone
 with Gemma running locally. Kotlin, Jetpack Compose, nine Gradle modules.
 

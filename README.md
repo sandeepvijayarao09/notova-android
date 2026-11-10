@@ -25,7 +25,7 @@ and says transcription is unavailable instead of inventing a transcript.</sub>
 
 Part of Notova:
 [notova-ios](https://github.com/sandeepvijayarao09/notova-ios) ·
-[notova-backend](https://github.com/sandeepvijayarao09/notova-backend) ·
+backend (accounts, OAuth token broker, sync): private repository, available on request ·
 [roadmap](ROADMAP.md)
 
 ## Highlights
@@ -76,8 +76,8 @@ export JAVA_HOME=/path/to/jdk-17
 
 ### Accounts and export (optional)
 
-Sign-in, sync and export go through [notova-backend](https://github.com/sandeepvijayarao09/notova-backend),
-which has no public deployment. The default backend URL is `http://10.0.2.2:8787/`, i.e.
+Sign-in, sync and export go through the backend (accounts, OAuth token broker, sync), which lives in a private repository and is available on request.
+It has no public deployment. The default backend URL is `http://10.0.2.2:8787/`, i.e.
 a local `npm run dev` server seen from the emulator; cleartext HTTP is allowed only for
 that host and localhost. Build against another deployment with
 `./gradlew assembleDebug -Pnotova.backendUrl=https://your-host/`. Providers match the
